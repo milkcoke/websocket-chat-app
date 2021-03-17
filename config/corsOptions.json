@@ -1,0 +1,7 @@
+
+{
+  "exposeHeaders" : ["WWW-Authenticate", "Server-Authorization"],
+  "credentials": true,
+  "allowMethods": ["GET", "POST", "OPTION"],
+  "allowHeaders": ["Content-Type", "Authorization", "Accept"]
+}

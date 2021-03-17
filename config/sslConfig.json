@@ -1,0 +1,5 @@
+{
+  "privateKeyFileName": "privatekey.pem",
+  "caFileName": "csr.pem",
+  "publicCRTFileName": "public.crt"
+}

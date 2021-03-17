@@ -1,5 +1,4 @@
 {
-  "server": "http.Server",
   "path": "wss://localhost",
   "port": 3000
 }
