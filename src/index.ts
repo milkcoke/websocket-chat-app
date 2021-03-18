@@ -8,7 +8,7 @@ import sslConfig from '../config/sslConfig.json';
 import https from "https";
 import path from 'path';
 import * as fs from "fs";
-import {IncomingMessage} from "http";
+import http from "http";
 
 const app = new Koa();
 const router = new Router();
@@ -31,10 +31,6 @@ app.use(cors(
     }
 ));
 
-app.on('error', (error: Error, ctx: Context)=> {
-    console.error(`server error ${error} ${ctx}`);
-});
-
 router.get('default', '/', async (ctx: Context, next: Next)=>{
     await next();
     ctx.response.type = 'json';
@@ -51,30 +47,41 @@ httpsServer.listen(config.port, ()=>{
 })
 
 
-const wss = new WebSocket.Server({...config, server : httpsServer})
-
+// console.log({...config});
+const wss = new WebSocket.Server({server : httpsServer});
 
 function broadCast(message: string) {
-    wss.clients.forEach((client)=>{
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(message);
+    console.log(`client input :${message}`);
+
+    wss.clients.forEach((clientWebSocket)=>{
+        if (clientWebSocket.readyState === WebSocket.OPEN) {
+            clientWebSocket.send(message);
         }
     });
 }
 
-function connection(webSocket : WebSocket, request: Request) {
-    console.log('Hello');
-    webSocket.on('message', broadCast)
+function connection(webSocket : WebSocket, request: http.IncomingMessage) {
+    // 모든 클라이언트 웹소켓이 최초 연결시에 메시지 받을 때 마다 브로드캐스팅 한다고 이벤트 등록해둠.
+
     const clientIp : string = request.socket.remoteAddress!;
-    webSocket.send(`hello, your ip is ${clientIp}`);
+    console.log(`somebody connect WebSocket client ip : ${clientIp}`);
+
+    // client WebSocket send any message, WebSocket Server should sent message to all clients (websockets)
+    webSocket.on('message', broadCast);
+    webSocket.on('close', ()=>{
+        broadCast(`client : ${clientIp} is out!`);
+        webSocket.terminate();
+    })
+
+
 }
 
 wss.on('connection', connection)
 
-wss.on('error', async (server : WebSocket, error : Error)=>{
+wss.on('error', async (server : WebSocket.Server, error : Error)=>{
     console.error(error);
 });
 
-wss.on('close', async ()=>{
+wss.on('close', async (server: WebSocket.Server)=>{
     console.log('disconnected');
 });

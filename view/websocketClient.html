@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Client</title>
+</head>
+<body>
+    <button id="connectWebSocket">connect</button>
+    <input type="text" id="clientTextMessage"/>
+    <button id="sendMessage">send message</button>
+    <button id="disconnectWebSocket">disconnect</button>
+
+</body>
+
+
+<script type="text/javascript">
+    let webSocket = new WebSocket('wss://localhost:3000');
+    webSocket.onopen = ()=>{
+        console.log('web socket client connect with server!');
+    }
+
+    webSocket.onerror = (error)=>{
+        console.error(error);
+    }
+
+    webSocket.onclose = ()=>{
+        console.log('web socket client disconnect with server!');
+    }
+    webSocket.onmessage = (message) => {
+        console.log(`from server message: ${message.data}`);
+    }
+
+    document.getElementById("connectWebSocket").addEventListener('click', ()=>{
+        webSocket = new WebSocket('wss://localhost:3000');
+    })
+    document.getElementById("sendMessage").addEventListener('click', ()=>{
+        const textMessage = document.getElementById("clientTextMessage");
+        webSocket.send(textMessage.value);
+        textMessage.value = ' ';
+    });
+
+    document.getElementById("disconnectWebSocket").addEventListener('click', ()=>{
+        webSocket.close(1000, 'exit the chat');
+    });
+
+</script>
+</html>
