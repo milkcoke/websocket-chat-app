@@ -1,5 +1,5 @@
 // import config from '../config/config.json'
-const webSocket = new WebSocket('wss://localhost:3000');
+let webSocket = new WebSocket('wss://localhost:3000');
 
 webSocket.onopen = ()=>{
     console.log('web socket client connect with server!');
