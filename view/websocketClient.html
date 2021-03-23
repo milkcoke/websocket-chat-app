@@ -13,11 +13,14 @@
 </body>
 
 <script type="module">
-    import webSocket from "../dist/src/client.mjs";
+    import initializeWebSocket from "../dist/src/client.mjs";
+    let webSocket = initializeWebSocket();
 
     document.getElementById("connectWebSocket").addEventListener('click', ()=>{
-        webSocket = new WebSocket('wss://localhost:3000');
-    })
+        if(webSocket) console.log(`you are already connected to server`);
+        else webSocket = initializeWebSocket();
+    });
+
     document.getElementById("sendMessage").addEventListener('click', ()=>{
         const textMessage = document.getElementById("clientTextMessage");
         webSocket.send(textMessage.value);
@@ -25,7 +28,11 @@
     });
 
     document.getElementById("disconnectWebSocket").addEventListener('click', ()=>{
-        webSocket.close(1000, 'exit the chat');
+        if (!webSocket) console.log('you already disconnected with WebSocket Server');
+        else {
+            webSocket.close(1000, 'exit the chat');
+            webSocket = undefined;
+        }
     });
 
 </script>
