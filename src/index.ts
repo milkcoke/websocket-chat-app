@@ -36,18 +36,14 @@ router.get('default', '/', async (ctx: Context, next: Next)=>{
     ctx.response.type = 'json';
     ctx.response.body = 'this message is from https Server';
 });
-
 app.use(router.routes());
 
-// https://localhost:port 로 연결해보자.
 const httpsServer = https.createServer(sslOptions, app.callback());
 
 httpsServer.listen(config.port, ()=>{
     console.log(`Server is running on ${config.port}`);
 })
 
-
-// console.log({...config});
 const wss = new WebSocket.Server({server : httpsServer});
 
 function broadCast(message: string) {
@@ -60,28 +56,52 @@ function broadCast(message: string) {
     });
 }
 
-function connection(webSocket : WebSocket, request: http.IncomingMessage) {
-    // 모든 클라이언트 웹소켓이 최초 연결시에 메시지 받을 때 마다 브로드캐스팅 한다고 이벤트 등록해둠.
+const heartBeatCheck = setInterval(()=>{
+    wss.clients.forEach(ws=>{
+        // @ts-ignore
+        if (ws['isAlive'] === false) return ws.terminate();
+        // @ts-ignore
+        ws['isAlive'] = false;
+        ws.ping('', false);
+    });
+}, 5 * 1000);
 
+function connection(webSocket : WebSocket, request: http.IncomingMessage) {
+    //@ts-ignore
+    webSocket.isAlive = true;
+
+    // 모든 클라이언트 웹소켓이 최초 연결시에 메시지 받을 때 마다 브로드캐스팅 한다고 이벤트 등록해둠.
     const clientIp : string = request.socket.remoteAddress!;
     console.log(`somebody connect WebSocket client ip : ${clientIp}`);
 
     // client WebSocket send any message, WebSocket Server should sent message to all clients (websockets)
+
+    webSocket.on('ping', (data => {
+        console.log(`receive from client ping buffer : ${data}`);
+    }));
+
+    webSocket.on('pong', (data) => {
+        //@ts-ignore
+        webSocket.isAlive = true
+        console.log(`pong buffer: ${data.toString('utf8')}`);
+    });
+
     webSocket.on('message', broadCast);
     webSocket.on('close', ()=>{
         broadCast(`client : ${clientIp} is out!`);
         webSocket.terminate();
-    })
+    });
 
 
 }
 
-wss.on('connection', connection)
+wss.on('connection', connection);
 
 wss.on('error', async (server : WebSocket.Server, error : Error)=>{
     console.error(error);
 });
 
 wss.on('close', async (server: WebSocket.Server)=>{
+    clearInterval(heartBeatCheck);
     console.log('disconnected');
 });
