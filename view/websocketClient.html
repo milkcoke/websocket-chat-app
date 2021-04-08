@@ -13,27 +13,35 @@
 </body>
 
 <script type="module">
-    import initializeWebSocket from "../dist/src/client.mjs";
+    import initializeWebSocket from "../dist/src/client.js";
     let webSocket = initializeWebSocket();
 
-    document.getElementById("connectWebSocket").addEventListener('click', ()=>{
-        if(webSocket) console.log(`you are already connected to server`);
-        else webSocket = initializeWebSocket();
-    });
+    // webSocket 이 연결되어야만 이벤트 등록.
+    webSocket.then(()=>{
+        document.getElementById("connectWebSocket").addEventListener('click', ()=>{
+            if (webSocket) console.log(`you are already connected to server`);
+            else webSocket = initializeWebSocket();
+        });
 
-    document.getElementById("sendMessage").addEventListener('click', ()=>{
-        const textMessage = document.getElementById("clientTextMessage");
-        webSocket.send(textMessage.value);
-        textMessage.value = ' ';
-    });
+        document.getElementById("sendMessage").addEventListener('click', ()=>{
+            const textMessage = document.getElementById("clientTextMessage");
+            webSocket.send(textMessage.value);
+            textMessage.value = ' ';
+        });
 
-    document.getElementById("disconnectWebSocket").addEventListener('click', ()=>{
-        if (!webSocket) console.log('you already disconnected with WebSocket Server');
-        else {
-            webSocket.close(1000, 'exit the chat');
-            webSocket = undefined;
-        }
-    });
+        document.getElementById("disconnectWebSocket").addEventListener('click', ()=>{
+            if (!webSocket) console.log('you already disconnected with WebSocket Server');
+            else {
+                webSocket.close(1000, 'exit the chat');
+                webSocket = undefined;
+            }
+        });
+
+    })
+    .catch(console.error)
+
+
+
 
 </script>
 
